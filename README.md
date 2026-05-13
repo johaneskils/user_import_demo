@@ -45,6 +45,12 @@ Any modern Python 3.x version should work well.
 
 # Files
 
+## demo.ipynb
+```text
+Jupyter notebook file with the code to run the demo, with instructions.
+```
+
+
 ## access_rules.csv
 
 ```text
