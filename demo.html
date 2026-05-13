@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manual User Import Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 24px;
+      background: #f5f5f5;
+      color: #222;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    h1, h2 {
+      margin-top: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    input, select, button {
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 4px;
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    button {
+      margin-top: 14px;
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background: #eee;
+    }
+
+    .step {
+      margin-bottom: 28px;
+    }
+
+    .small {
+      font-size: 13px;
+      color: #555;
+    }
+
+    .output {
+      white-space: pre;
+      background: #111;
+      color: #eee;
+      padding: 12px;
+      overflow-x: auto;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .warning {
+      background: #fff3cd;
+      border: 1px solid #eedc82;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Manual User Import Demo</h1>
+    <p class="small">
+      This version does not infer access automatically. Every import row must be created manually by selecting user, access ward, access type, and equipment class.
+    </p>
+
+    <div class="warning">
+      Purpose: demonstrate the manual work that the rule-based import generator replaces.
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>1. Add User</h2>
+
+        <label>User ID</label>
+        <input id="userId" value="U1" />
+
+        <label>User Name</label>
+        <input id="userName" value="Alice" />
+
+        <label>Home Ward</label>
+        <select id="userWard">
+          <option>A1</option>
+          <option>A2</option>
+          <option>A3</option>
+          <option>A4</option>
+          <option>A5</option>
+        </select>
+
+        <button onclick="addUser()">Add User</button>
+      </div>
+
+      <div class="card">
+        <h2>2. Manually Add Import Row</h2>
+
+        <label>User</label>
+        <select id="rowUser"></select>
+
+        <label>Access Ward</label>
+        <select id="rowAccessUnit">
+          <option>A1</option>
+          <option>A2</option>
+          <option>A3</option>
+          <option>A4</option>
+          <option>A5</option>
+        </select>
+
+        <label>Access Type</label>
+        <select id="rowAccessType">
+          <option value="N">N - Normal/Home</option>
+          <option value="R">R - Rotation/Remote</option>
+        </select>
+
+        <label>Equipment Class</label>
+        <select id="rowEquipmentClass">
+          <option>ALPHA</option>
+          <option>BETA</option>
+          <option>GAMMA</option>
+          <option>DELTA</option>
+        </select>
+
+        <button onclick="addImportRow()">Add Import Row</button>
+      </div>
+    </div>
+
+    <div class="step">
+      <h2>Users</h2>
+      <table id="usersTable"></table>
+    </div>
+
+    <div class="step">
+      <h2>Manually Created Import Rows</h2>
+      <table id="importTable"></table>
+    </div>
+
+    <div class="step">
+      <h2>CSV Export Preview</h2>
+      <button onclick="generateCsvPreview()">Generate CSV Preview</button>
+      <div id="csvPreview" class="output"></div>
+    </div>
+  </div>
+
+  <script>
+    const users = [];
+    const importRows = [];
+
+    function renderTable(id, rows, columns) {
+      const table = document.getElementById(id);
+      let html = "<thead><tr>";
+      columns.forEach(col => html += `<th>${col}</th>`);
+      html += "</tr></thead><tbody>";
+
+      rows.forEach(row => {
+        html += "<tr>";
+        columns.forEach(col => html += `<td>${row[col] ?? ""}</td>`);
+        html += "</tr>";
+      });
+
+      html += "</tbody>";
+      table.innerHTML = html;
+    }
+
+    function updateUserSelect() {
+      const select = document.getElementById("rowUser");
+      select.innerHTML = "";
+
+      users.forEach(user => {
+        const option = document.createElement("option");
+        option.value = user.user_id;
+        option.textContent = `${user.user_id} - ${user.name} (${user.employed_at})`;
+        select.appendChild(option);
+      });
+    }
+
+    function addUser() {
+      const user = {
+        user_id: document.getElementById("userId").value,
+        name: document.getElementById("userName").value,
+        employed_at: document.getElementById("userWard").value
+      };
+
+      users.push(user);
+      renderAll();
+    }
+
+    function addImportRow() {
+      const selectedUserId = document.getElementById("rowUser").value;
+      const user = users.find(u => u.user_id === selectedUserId);
+
+      if (!user) {
+        alert("Add a user first.");
+        return;
+      }
+
+      importRows.push({
+        user_id: user.user_id,
+        user_name: user.name,
+        employed_at: user.employed_at,
+        access_unit: document.getElementById("rowAccessUnit").value,
+        access_type: document.getElementById("rowAccessType").value,
+        equipment_class: document.getElementById("rowEquipmentClass").value
+      });
+
+      renderAll();
+    }
+
+    function generateCsvPreview() {
+      const columns = [
+        "user_id",
+        "user_name",
+        "employed_at",
+        "access_unit",
+        "access_type",
+        "equipment_class"
+      ];
+
+      const lines = [];
+      lines.push(columns.join(";"));
+
+      importRows.forEach(row => {
+        lines.push(columns.map(col => row[col]).join(";"));
+      });
+
+      document.getElementById("csvPreview").textContent = lines.join("\n");
+    }
+
+    function renderAll() {
+      updateUserSelect();
+
+      renderTable("usersTable", users, [
+        "user_id",
+        "name",
+        "employed_at"
+      ]);
+
+      renderTable("importTable", importRows, [
+        "user_id",
+        "user_name",
+        "employed_at",
+        "access_unit",
+        "access_type",
+        "equipment_class"
+      ]);
+
+      generateCsvPreview();
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
