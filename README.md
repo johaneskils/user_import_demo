@@ -96,6 +96,16 @@ name        = user name
 employed_at = user's home ward
 ```
 
+## user_import_export.csv
+
+```text
+Created import file that is read by the Point of Care Laboratory Information System import script.
+
+user_id,user_name,employed_at,access_unit,access_type,equipment_class
+U1,Alice,A1,A1,N,ALPHA
+...
+
+
 ## demo.html
 ```text
 This is a simple in-browser HTML file that mimics the manual process of assigning user access.

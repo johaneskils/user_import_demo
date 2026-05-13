@@ -1,0 +1,8 @@
+instrument_id,unit_id,instrument_class
+I001,A1,ALPHA
+I002,A1,BETA
+I003,A2,BETA
+I004,A2,GAMMA
+I005,A3,DELTA
+I006,A4,ALPHA
+I007,A5,GAMMA
